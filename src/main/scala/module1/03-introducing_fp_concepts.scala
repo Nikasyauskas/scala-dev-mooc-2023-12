@@ -84,6 +84,15 @@ object recursion {
    *
    */
 
+   //TODO: note working
+   def tailRecFib(n: Int): Int = {
+      @tailrec
+      def loop(i: Int, a: Int, b: Int): Int =
+        if(i == n) a + b
+        else loop(i + 1, b, a + b)
+      loop(2, 0, 1)
+   }
+
 
 }
 
@@ -220,6 +229,20 @@ object hof{
       case None => throw new Exception("get on empty option")
     }
 
+    def printIfAny(): Unit = this match {
+      case Some(v) => println(v)
+      case None => println("empty")
+    }
+
+    def zip[B](other: Option[B]): Option[(T, B)] = (this, other) match {
+      case (Some(v1), Some(v2)) => Some((v1, v2))
+      case _ => None
+    }
+
+    def filter(f: T => Boolean): Option[T] = this match {
+      case Some(v) => if (f(v)) Some(v) else None
+      case None => None
+    }
 
     def map[B](f: T => B): Option[B] = flatMap(t => Option(f(t)))
 
@@ -242,18 +265,11 @@ object hof{
   val o1: Option[Int] = Option(1)
   o1.isEmpty // false
 
-
-
-
-
-
-
-
-
   /**
    *
    * Реализовать метод printIfAny, который будет печатать значение, если оно есть
    */
+
 
 
   /**
@@ -280,10 +296,23 @@ object hof{
     */
 
     trait List[+T]{
-      def ::[TT >: T](elem: TT): List[TT] = ???
+      def ::[TT >: T](elem: TT): List[TT] = List.::(elem, this)
+      def mkString(delim: String): String = this match {
+        case List.::(head, tail) => head + delim + tail.mkString(delim)
+        case List.Nil => ""
+      }
+      def reverse: List[T] = {
+        @tailrec
+        def loop(acc: List[T], cur: List[T]): List[T] = cur match {
+          case List.::(head, tail) => loop(head :: acc, tail)
+          case List.Nil => acc
+        }
+        loop(List.Nil, this)
+      }
+
     }
 
-    object List{
+    object List {
       case class ::[A](head: A, tail: List[A]) extends List[A]
       case object Nil extends List[Nothing]
 
