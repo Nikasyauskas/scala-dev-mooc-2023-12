@@ -297,6 +297,10 @@ object hof{
 
     trait List[+T]{
       def ::[TT >: T](elem: TT): List[TT] = List.::(elem, this)
+      def :::[TT >: T](prefix: List[TT]): List[TT] = prefix match {
+        case List.::(head, tail) => head :: (tail ::: this)
+        case List.Nil => this
+      }
       def mkString(delim: String): String = this match {
         case List.::(head, tail) => head + delim + tail.mkString(delim)
         case List.Nil => ""
@@ -309,7 +313,24 @@ object hof{
         }
         loop(List.Nil, this)
       }
-
+      def map[B](f: T => B): List[B] = {
+        @tailrec
+        def loop(acc: List[B], currentList: List[T]): List[B] = currentList match {
+          case List.::(head, tail) => loop(f(head) :: acc, tail)
+          case List.Nil => acc
+        }
+        loop(List.Nil, this)
+      }
+      def flatMap[B](f: T => List[B]): List[B] = ???
+      def filter(p: T => Boolean): List[T] = {
+        @tailrec
+        def loop(acc: List[T], currentList: List[T]): List[T] = currentList match {
+          case List.::(head,tail) if (p(head)) => loop(head :: acc, tail)
+          case List.::(head,tail) => loop(acc,tail)
+          case List.Nil => acc.reverse
+        }
+        loop(List.Nil, this)
+      }
     }
 
     object List {
