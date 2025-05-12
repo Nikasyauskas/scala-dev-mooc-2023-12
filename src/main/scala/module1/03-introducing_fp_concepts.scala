@@ -297,10 +297,6 @@ object hof{
 
     trait List[+T]{
       def ::[TT >: T](elem: TT): List[TT] = List.::(elem, this)
-      def :::[TT >: T](prefix: List[TT]): List[TT] = prefix match {
-        case List.::(head, tail) => head :: (tail ::: this)
-        case List.Nil => this
-      }
       def mkString(delim: String): String = this match {
         case List.::(head, tail) => head + delim + tail.mkString(delim)
         case List.Nil => ""
@@ -321,7 +317,15 @@ object hof{
         }
         loop(List.Nil, this)
       }
-      def flatMap[B](f: T => List[B]): List[B] = ???
+      //TODO: doesn't work
+     def flatMap[B](f: T => List[B]): List[B] = {
+       @tailrec
+       def loop(acc: List[B], currentList: List[T]): List[B] = currentList match {
+         case List.::(head, tail) => loop(f(head) :: acc, tail)
+         case List.Nil => acc
+       }
+       loop(List.Nil, this)
+     }
       def filter(p: T => Boolean): List[T] = {
         @tailrec
         def loop(acc: List[T], currentList: List[T]): List[T] = currentList match {
@@ -334,11 +338,11 @@ object hof{
     }
 
     object List {
-      case class ::[A](head: A, tail: List[A]) extends List[A]
+      case class ::[T](head: T, tail: List[T]) extends List[T]
       case object Nil extends List[Nothing]
 
-      def apply[A](v: A*): List[A] =
-        if(v.isEmpty) List.Nil else new ::(v.head, apply(v.tail:_*))
+      def apply[T](v: T*): List[T] =
+        if(v.isEmpty) List.Nil else ::(v.head, apply(v.tail:_*))
     }
 
     val l1: List[Int] = List(1, 2, 3)
